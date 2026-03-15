@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"github.com/megadoge1337/url-shortener/internal/repository"
 	"github.com/megadoge1337/url-shortener/internal/service"
 	"github.com/pressly/goose/v3"
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 )
 
@@ -99,9 +101,28 @@ func main() {
 	}
 	slog.Info("migrations completed successfully")
 
+	// open redis connection
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     environment.GetString("REDIS_ADDRESS"),
+		Password: environment.GetString("REDIS_PASSWORD"),
+		DB:       environment.GetInt("REDIS_DB"),
+	})
+	defer rdb.Close()
+
+	// test redis connection
+	rdbCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err = rdb.Ping(rdbCtx).Result()
+	if err != nil {
+		slog.Error("failed to ping redis", slog.Any("error", err))
+		os.Exit(1)
+	}
+	slog.Info("redis connection established")
+
 	// initialize application layers
 	urlRepo := repository.NewUrlRepository(db)
-	urlService := service.NewUrlService(urlRepo)
+	urlService := service.NewUrlService(urlRepo, rdb)
 	urlHandler := handler.NewUrlHandler(urlService)
 
 	// setup router
@@ -116,7 +137,6 @@ func main() {
 	// routes
 	router.Route("/urls", func(r chi.Router) {
 		r.Post("/", urlHandler.Create)
-		r.Get("/id/{id}", urlHandler.RedirectByID)
 		r.Get("/alias/{alias}", urlHandler.RedirectByAlias)
 	})
 
