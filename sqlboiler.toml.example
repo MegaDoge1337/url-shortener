@@ -1,0 +1,14 @@
+output   = "models"
+wipe     = true
+no-tests = true
+add-enum-types = true
+
+[psql]
+  dbname = "urlshortener"
+  host   = "localhost"
+  port   = 5432
+  user   = "postgres"
+  pass   = "1Qwerty"
+  schema = "public"
+  sslmode = "disable"
+  blacklist = ["migrations"]

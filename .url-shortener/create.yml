@@ -1,0 +1,21 @@
+info:
+  name: create
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8082/urls/
+  body:
+    type: json
+    data: |-
+      {
+        "url": "google.com"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
