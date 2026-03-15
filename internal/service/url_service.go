@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"net/url"
 	"time"
 
 	"github.com/megadoge1337/url-shortener/internal/domain"
@@ -23,13 +25,21 @@ func NewUrlService(repo *repository.UrlRepository, cache *redis.Client) *UrlServ
 }
 
 func (s *UrlService) Create(u domain.URL) (*domain.URL, error) {
-	var urlModel models.URL
-	urlModel.ID = u.ID
-	urlModel.URL = u.URL
-	urlModel.Alias = u.Alias
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	raw, err := s.cache.Get(ctx, normalizeURL(u.URL)).Bytes()
+	if err == nil {
+		var cached domain.URL
+		if jsonErr := json.Unmarshal(raw, &cached); jsonErr == nil {
+			return &cached, nil
+		}
+	}
+
+	var urlModel models.URL
+	urlModel.ID = u.ID
+	urlModel.URL = normalizeURL(u.URL)
+	urlModel.Alias = u.Alias
 
 	newUrl, err := s.repo.Create(ctx, &urlModel)
 	if err != nil {
@@ -39,6 +49,12 @@ func (s *UrlService) Create(u domain.URL) (*domain.URL, error) {
 	u.ID = newUrl.ID
 	u.URL = newUrl.URL
 	u.Alias = newUrl.Alias
+
+	uJson, err := json.Marshal(u)
+	if err == nil {
+		s.cache.Set(ctx, u.URL, uJson, 1*time.Minute)
+	}
+
 	return &u, nil
 }
 
@@ -57,5 +73,13 @@ func (s *UrlService) GetByAlias(alias string) (*domain.URL, error) {
 		Alias: urlModel.Alias,
 	}
 
-	return &url, err
+	return &url, nil
+}
+
+func normalizeURL(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil || u.Scheme == "" {
+		return "https://" + rawURL
+	}
+	return rawURL
 }

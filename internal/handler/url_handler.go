@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -86,15 +85,7 @@ func (h *UrlHandler) RedirectByAlias(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, normalizeURL(url.URL), http.StatusFound)
-}
-
-func normalizeURL(rawURL string) string {
-	u, err := url.Parse(rawURL)
-	if err != nil || u.Scheme == "" {
-		return "https://" + rawURL
-	}
-	return rawURL
+	http.Redirect(w, r, url.URL, http.StatusFound)
 }
 
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
