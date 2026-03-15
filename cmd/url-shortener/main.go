@@ -116,7 +116,6 @@ func main() {
 	// routes
 	router.Route("/urls", func(r chi.Router) {
 		r.Post("/", urlHandler.Create)
-		r.Get("/id/{id}", urlHandler.RedirectByID)
 		r.Get("/alias/{alias}", urlHandler.RedirectByAlias)
 	})
 

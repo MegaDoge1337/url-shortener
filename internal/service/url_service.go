@@ -39,24 +39,6 @@ func (s *UrlService) Create(u domain.URL) (*domain.URL, error) {
 	return &u, nil
 }
 
-func (s *UrlService) GetById(id int) (*domain.URL, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	urlModel, err := s.repo.GetById(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	url := domain.URL{
-		ID:    urlModel.ID,
-		URL:   urlModel.URL,
-		Alias: urlModel.Alias,
-	}
-
-	return &url, err
-}
-
 func (s *UrlService) GetByAlias(alias string) (*domain.URL, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
