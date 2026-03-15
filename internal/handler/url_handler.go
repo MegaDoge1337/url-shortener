@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -71,24 +70,6 @@ func (h *UrlHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusCreated, response)
-}
-
-func (h *UrlHandler) RedirectByID(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid id", "id must be an integer")
-		return
-	}
-
-	url, err := h.s.GetById(id)
-	if err != nil {
-		slog.Error("failed to get url by id", slog.Any("error", err))
-		respondWithError(w, http.StatusNotFound, "not found", "url not found")
-		return
-	}
-
-	http.Redirect(w, r, normalizeURL(url.URL), http.StatusFound)
 }
 
 func (h *UrlHandler) RedirectByAlias(w http.ResponseWriter, r *http.Request) {
