@@ -1,29 +1,34 @@
+name: redis
+
 services:
   postgres:
     image: postgres:16
     environment:
       POSTGRES_PASSWORD: 1Qwerty
+      PGPORT: 5433
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5433:5433"
     restart: always
 
   redis:
     image: redis:latest
+    command: redis-server --port 6380
     ports:
-      - "6379:6379"
+      - "6380:6380"
     restart: always
 
   service:
     build: .
+    image: url-shortener-service-redis
     deploy:
       resources:
         limits:
           cpus: "2"
           memory: 1G
     ports:
-      - "8082:8082"
+      - "8083:8083"
     volumes:
       - ./configs:/configs
       - ./.env.docker:/.env
