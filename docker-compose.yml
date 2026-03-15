@@ -1,3 +1,5 @@
+name: base
+
 services:
   postgres:
     image: postgres:16
@@ -11,6 +13,7 @@ services:
 
   service:
     build: .
+    image: url-shortener-service-base
     deploy:
       resources:
         limits:
